@@ -1,0 +1,61 @@
+
+
+
+problem 1:
+
+register '/usr/lib/pig/piggybank.jar';
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+crimesRel = load '/project1/Crimes_-_2001_to_present.csv' using CSVLoader(',') as (id:int, caseNumber:chararray, date:chararray, block:chararray, iucr:int, primaryType:chararray, description:chararray, locationDesc:chararray, arrest:boolean, domestic:boolean, beat:int, district:int, ward:int, communityArea:int, fbiCode:chararray, xCoord:int, yCoord:int, year:int, updatedOn:chararray, latitude:float, longitude:float, location:chararray);
+
+grpByFBICode = group crimesRel by fbiCode;
+
+countCasesForEachFBI = foreach grpByFBICode generate group, COUNT(crimesRel);
+dump countCasesForEachFBI;
+========================================================================+====================================+====================================+
+problem 2:
+
+register '/usr/lib/pig/piggybank.jar';
+
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+crimesRel = load '/project1/Crimes_-_2001_to_present.csv' using CSVLoader(',') as (id:int, caseNumber:chararray, date:chararray, block:chararray, iucr:int, primaryType:chararray, description:chararray, locationDesc:chararray, arrest:boolean, domestic:boolean, beat:int, district:int, ward:int, communityArea:int, fbiCode:chararray, xCoord:int, yCoord:int, year:int, updatedOn:chararray, latitude:float, longitude:float, location:chararray);
+
+filterFbiCodeRel = filter crimesRel by fbiCode == '32';
+
+groupGivenFBICode = group filterFbiCodeRel all;
+
+countgivenFbiCode = foreach groupGivenFBICode generate COUNT(filterFbiCodeRel);
+dump countgivenFbiCode;
+
+========================================================================+====================================+====================================+
+problem 3:
+
+register '/usr/lib/pig/piggybank.jar';
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+crimesRel = load '/project1/Crimes_-_2001_to_present.csv' using CSVLoader(',') as (id:int, caseNumber:chararray, date:chararray, block:chararray, iucr:int, primaryType:chararray, description:chararray, locationDesc:chararray, arrest:boolean, domestic:boolean, beat:int, district:int, ward:int, communityArea:int, fbiCode:chararray, xCoord:int, yCoord:int, year:int, updatedOn:chararray, latitude:float, longitude:float, location:chararray);
+filterArrestForTheft = filter crimesRel by arrest == TRUE AND primaryType == 'THEFT';
+
+grpTheftCasesDistricWise = group filterArrestForTheft by district;
+
+countTheftCasesDistrictWise = foreach grpTheftCasesDistricWise generate group, COUNT(filterArrestForTheft);
+dump countTheftCasesDistrictWise;
+
+========================================================================+====================================+====================================+
+
+problem 4:
+
+register '/usr/lib/pig/piggybank.jar';
+
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+crimesRel = load '/project1/Crimes_-_2001_to_present.csv' using CSVLoader(',') as (id:int, caseNumber:chararray, date:chararray, block:chararray, iucr:int, primaryType:chararray, description:chararray, locationDesc:chararray, arrest:boolean, domestic:boolean, beat:int, district:int, ward:int, communityArea:int, fbiCode:chararray, xCoord:int, yCoord:int, year:int, updatedOn:chararray, latitude:float, longitude:float, location:chararray);
+
+dateFormatRel = foreach crimesRel generate ToDate(date,'MM/dd/yyyy HH:mm:ss aa','America/Los_Angeles') as (dt:datetime), arrest;
+filterArrestedCaseBetweenDates = filter dateFormatRel by DaysBetween(dt,(datetime)ToDate('10/1/2014', 'MM/dd/yyyy')) >= (long)0 AND DaysBetween(dt,(datetime)ToDate('10/31/2015', 'MM/dd/yyyy')) <= (long)0 AND arrest == TRUE;
+
+grpFilteredCrimes = group filterArrestedCaseBetweenDates all;
+
+countCrimes = foreach grpFilteredCrimes generate COUNT(filterArrestedCaseBetweenDates);
+dump countCrimes;
